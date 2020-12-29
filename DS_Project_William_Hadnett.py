@@ -126,6 +126,26 @@ describe = df.describe()
 # length of text and most frequent words used for both fake and real news 
 # may help refine this classification model.   
 
+# =============================================================================
+# STEP 2 - Data Cleaning
+# =============================================================================
+
+# Remove quotation marks from quotes in dataframe.
+
+# Discovered that two different types of quotes where present within this dataset
+# removed both sets to avoid issues with processing later during this project.
+
+df['Quote'] = df['Quote'].str.strip('[",“,”]') 
+df['Quote'] = df['Quote'].str.replace('[",“,”]', '')
+
+
+
+
+
+
+
+
+
 
 
 
