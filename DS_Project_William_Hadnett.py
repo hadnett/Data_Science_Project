@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from nltk.corpus import stopwords
 import re
+from wordcloud import WordCloud
 
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
@@ -346,12 +347,48 @@ plt.title('Quotes Containing Digits')
 plt.show()
 
 # It appears that news quotes that contain digits (aka stats) are more likely to
-# to be True. This is surprising. I would have thought that unreliable quotes
+# to be True. This is surprising. I thought that unreliable quotes
 # would have used stats to leverage peoples opinions. 
 
+# Most Frequently used words in reliable and unreliable news quotes.
+
+reliableData = df[df["isTrue"] == True]
+
+frequentWordsReliable = reliableData.Quote.str.lower() \
+        .apply(lambda x: 
+           ' '.join([word for word in str(x).split() if word not in (stop)])) \
+        .str.split(expand=True).stack().value_counts()
+        
+frequentWordsReliable.plot.bar()
+plt.title("10 Most Frequent Words in Reliable News")
+plt.ylabel("Count")
+plt.xlabel("Word")
+plt.xlim(0,10)
+plt.show()
+        
+unreliableData = df[df["isTrue"] == False]
+
+frequentWordsUnreliable = unreliableData.Quote.str.lower() \
+        .apply(lambda x: 
+           ' '.join([word for word in str(x).split() if word not in (stop)])) \
+        .str.split(expand=True).stack().value_counts()
+
+frequentWordsUnreliable.plot.bar()
+plt.title("10 Most Frequent Words in Unreliable News")
+plt.ylabel("Count")
+plt.xlabel("Word")
+plt.xlim(0,10)
+plt.show()
 
 
-# Compare Frequent Words to isTrue
+
+
+
+
+
+
+
+
 # Compare length of quote to isTrue (Create Bins of Some sort)
 
 
