@@ -14,6 +14,10 @@ import time
 import pandas as pd
 import os
 import numpy as np
+import seaborn as sns
+from sklearn import metrics
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure
 
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
@@ -192,8 +196,74 @@ describe = df['Quote'].describe()
 
 
 # =============================================================================
-# STEP 3 - Data Exploration
+# STEP 3 - Data Exploration - Univariate
 # =============================================================================
+
+sourceCount = df.Source.value_counts()
+
+# Bar chart showing the top 10 sources. 
+sourceCount.plot.bar()
+plt.title("Top 10 Sources")
+plt.ylabel("Total Quotes")
+plt.xlabel("Source")
+plt.xlim(0,10)
+plt.show()
+
+# It is clear from the bar chart displayed above that the top sources are primarily
+# social media platforms and politicians. The worlds top 3 social media platforms 
+# Facebook, Twitter and Instagram are all present within the top 10 sources with Facebook
+# ranking as the top source with 302 quotes. Other miscellaneous sources are also present
+# within the top ten such as 'Viral Image' and 'Bloggers'. I do not think it is unreasonable
+# to assume that both 'Viral Images' and 'Bloggers' also used social media platforms to 
+# distrubute their content. Some of the worlds most famous politicians are also present
+# Donald Trump (97 Quotes), Joe Biden (24 Quotes) and Hillary Clinton (38 Quotes) 
+# are also present.  
+
+dateCount = df.Date.value_counts()
+
+# Bar chart showing the 10 Most Popular Dates for posting.
+dateCount.plot.bar()
+plt.title("10 Most Popular Dates")
+plt.ylabel("Total Quotes")
+plt.xlabel("Date of Quote")
+plt.xlim(0,10)
+plt.show()
+
+# 04-11-2020 was the most popular date for quotes posted with a total of
+# 21 quotes posted on that day. This makes sense as we know the US elections
+# took place on the 03-11-2020. The 05-11-2020 was the second busiest day with
+# 14 quotes. The number of quotes posted per day then begins to level out 
+# ranging from 10 posts per day to 1 post per day.
+
+# Check split of true vs false news.
+numberTrueFalse = df.isTrue.value_counts(normalize=True)
+numberTrueFalse.plot.pie()
+plt.show()
+# Split: False = 0.500347, True = 0.499653
+# Balanced data is important for generating a classification model according to:
+# https://www.r-bloggers.com/2020/06/why-balancing-your-data-set-is-important/#:~:text=From%20the%20above%20examples%2C%20we,set%20for%20a%20classification%20model.
+# It is clear that the data selected for this project has a good balance of 
+# reliable and unreliable news quotes. 
+
+
+
+
+
+# Average Lenght of Quote
+# Shortest Quote
+# Longest Quote
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # TODO Also Determine if Person is male or female.
