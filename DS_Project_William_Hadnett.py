@@ -13,6 +13,8 @@ import requests
 import time
 import pandas as pd
 import os
+import numpy as np
+
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
 
@@ -71,7 +73,7 @@ else:
     df = pd.read_csv('fake_news.csv')
 
 # =============================================================================
-# STEP 1 - Data Mining - Specify data characteristics. 
+# STEP 2 - Data Mining - Specify data characteristics. 
 # =============================================================================
 
 df.info()
@@ -111,7 +113,7 @@ describe = df.describe()
 # most often in a column.
 
 # =============================================================================
-# STEP 1 - Data Mining - Identify Variables  
+# STEP 2 - Data Mining - Identify Variables  
 # =============================================================================
 
 # isTrue - Response Variable - Categorical - Classification Model Required
@@ -127,7 +129,7 @@ describe = df.describe()
 # may help refine this classification model.   
 
 # =============================================================================
-# STEP 2 - Data Cleaning
+# STEP 3 - Data Cleaning
 # =============================================================================
 
 # Remove quotation marks from quotes in dataframe.
@@ -138,21 +140,64 @@ describe = df.describe()
 df['Quote'] = df['Quote'].str.strip('[",“,”]') 
 df['Quote'] = df['Quote'].str.replace('[",“,”]', '')
 
+# Parse date field to determine date of post.
+# Started by separating the date data found into three separate columns.
+# Found this approach useful as it can be used for categorical analysis later
+# to determine quantity of fake news by month or year and this approach also 
+# simplifed the conversion to datetime using a pandas dataframe.
+df['Month'] = df['Date'].str.split().str[2]
+df['Day'] = df['Date'].str.split().str[3]
+df['Year'] = df['Date'].str.split().str[4]
+
+# Cleaned up the date data as whitespace and other irrelevant characters (':',',') 
+# where present after seperating the date data into three different columns.
+df['Month'] = df['Month'].str.strip()
+
+# This approach was discovered after I tried to convert the long month name 
+# 'June' to a date. Pandas to_datetime function cannot parse long month names.
+# Therefore, to overcome this problem the month name as been converted to an int.
+# Converting Month to Number: https://stackoverflow.com/questions/48122046/pandas-convert-month-name-to-int-concat-to-column-and-convert-to-date-time
+df['Month'] = pd.to_datetime(df.Month, format='%B').dt.month
+
+df['Day'] = df['Day'].str.strip(',')
+df['Year'] = df['Year'].str.strip()
+df['Year'] = df['Year'].str.strip(':')
+
+# Convert to datetime, but only store date as time is irrelevant for this 
+# analysis.
+df['Date'] = pd.to_datetime(df[['Year', 'Month', 'Day']]).dt.date
+
+# Check for null values in the dataset.
+df.isnull().sum()
+
+# Source    0
+# Quote     0
+# Date      0
+# isTrue    0
+# Month     0
+# Day       0
+# Year      0
+# No Null/Nan values present in the dataset.
+
+# We know from step 2 that there is a duplicate quote in the dataset. I believe
+# this duplicate should be removed. In this dataset the occurence of one duplicate
+# will probably not hinder the model produced greatly. However, if this dataset 
+# grows and a number of duplicates increase then this could cause a bias that 
+# may lead to the overfitting of this model. Producing a model that performs 
+# well on the training data but poorly on the test data. 
+describe = df['Quote'].describe()
+df = df.drop_duplicates(subset='Quote', keep='first')
+# No further duplicate quotes.
+describe = df['Quote'].describe()
 
 
+# =============================================================================
+# STEP 3 - Data Exploration
+# =============================================================================
 
 
-
-
-
-
-
-
-
-# TODO Data Cleaning Remove Data String. 
 # TODO Also Determine if Person is male or female.
 # TODO Setiment Analysis of posts.
-# TODO Export Results to CSV file.
 # TODO Shuffle Data. 
 
 
