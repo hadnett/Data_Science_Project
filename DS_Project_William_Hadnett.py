@@ -199,7 +199,7 @@ describe = df['Quote'].describe()
 
 
 # =============================================================================
-# STEP 3 - Data Exploration - Univariate
+# STEP 4 - Data Exploration - Univariate
 # =============================================================================
 
 sourceCount = df.Source.value_counts()
@@ -305,7 +305,7 @@ plt.show()
 # assosicated with reliable and unreliable news quotes. 
 
 # =============================================================================
-# STEP 3 - Data Exploration - Bivariate
+# STEP 4 - Data Exploration - Bivariate
 # =============================================================================
 
 sourceTrue = df.groupby('Source')['isTrue'].apply(lambda x: x[x == True].count())
@@ -394,15 +394,18 @@ plt.show()
 # more reliable news quotes are typically longer in length.
 
 # =============================================================================
-# STEP 3 - Data Exploration - Multivariate
+# STEP 4 - Data Exploration - Multivariate
 # =============================================================================
 
+# Currently I believe that multivariate Analysis cannot be carried out at this
+# stage due to a lack of variables (All Categorical). However, in the next section 'Feature 
+# Engineering' I intend to create more varaibles to further my analysis and 
+# it will be in this section that I continue exploring the data and conducting
+# multivariate analysis.
 
-
-
-
-
-
+# =============================================================================
+# STEP 5 - Feature Engineering
+# =============================================================================
 
 
 # TODO Also Determine if Person is male or female.
