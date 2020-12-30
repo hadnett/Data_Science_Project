@@ -302,9 +302,45 @@ plt.show()
 # However, in the next section I intend to review which of these words are 
 # assosicated with reliable and unreliable news quotes. 
 
+# =============================================================================
+# STEP 3 - Data Exploration - Bivariate
+# =============================================================================
+# df[df.a > 1].sum() 
+sourceTrue = df.groupby('Source')['isTrue'].apply(lambda x: x[x == True].count())
+sourceTrue = sourceTrue.sort_values(ascending=False)
+
+sourceTrue.plot.bar()
+plt.title("Top 10 Reliable Sources")
+plt.ylabel("Total True Posts")
+plt.xlabel("Source")
+plt.xlim(0,10)
+plt.show()
+
+sourceFalse = df.groupby('Source')['isTrue'].apply(lambda x: x[x == False].count())
+sourceFalse = sourceFalse.sort_values(ascending=False)
+
+sourceFalse.plot.bar()
+plt.title("Top 10 Unreliable Sources")
+plt.ylabel("Total False Posts")
+plt.xlabel("Source")
+plt.xlim(0,10)
+plt.show()
+
+# Upon reviewing both bar charts generated above there are a number of interesting
+# points. Firstly, Donald Trump appears in both categories along with Joe Biden. 
+# However, the top 10 reliable sources are almost all politicians/leaders/individuals. 
+# Whereas, 7 out of top 10 unreliable sources are social media platforms (Twitter,
+# Facebook, YouTube, Instagram, etc) this does not mean that these platforms are
+# unreliable sources but they do facility the spreading of fake news. This discovery
+# would lead me to believe that the majority of fake news is spread via one of these 
+# platforms. 
 
 
 
+
+# Compare Frequent Words to isTrue
+# Compare length of quote to isTrue (Create Bins of Some sort)
+# Compare digits to isTrue
 
 
 
