@@ -19,6 +19,7 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from nltk.corpus import stopwords
+import re
 
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
@@ -335,12 +336,23 @@ plt.show()
 # would lead me to believe that the majority of fake news is spread via one of these 
 # platforms. 
 
+statsReliability = df.groupby('isTrue')['Quote'].apply(lambda x: x[x.str.contains('\\d', regex=True)].count())
+
+# False    224
+# True     310
+
+statsReliability.plot.pie()
+plt.title('Quotes Containing Digits')
+plt.show()
+
+# It appears that news quotes that contain digits (aka stats) are more likely to
+# to be True. This is surprising. I would have thought that unreliable quotes
+# would have used stats to leverage peoples opinions. 
 
 
 
 # Compare Frequent Words to isTrue
 # Compare length of quote to isTrue (Create Bins of Some sort)
-# Compare digits to isTrue
 
 
 
