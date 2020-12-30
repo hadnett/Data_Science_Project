@@ -307,7 +307,7 @@ plt.show()
 # =============================================================================
 # STEP 3 - Data Exploration - Bivariate
 # =============================================================================
-# df[df.a > 1].sum() 
+
 sourceTrue = df.groupby('Source')['isTrue'].apply(lambda x: x[x == True].count())
 sourceTrue = sourceTrue.sort_values(ascending=False)
 
@@ -381,15 +381,23 @@ plt.xlim(0,10)
 plt.show()
 
 
+mean_len = df.Quote.str.len().groupby(df.isTrue).mean()
+
+mean_len.plot.bar()
+plt.title("Average Lenght of Quote by Reliability")
+plt.ylabel("Average Length")
+plt.xlabel("Reliability")
+plt.show()
+
+# The average length of reliable quotes is 108.193 and the average length
+# of unreliable quotes is 96.4931. This would suggest that on average the 
+# more reliable news quotes are typically longer in length.
+
+# =============================================================================
+# STEP 3 - Data Exploration - Multivariate
+# =============================================================================
 
 
-
-
-
-
-
-
-# Compare length of quote to isTrue (Create Bins of Some sort)
 
 
 
