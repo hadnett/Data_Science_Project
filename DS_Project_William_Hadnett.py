@@ -18,6 +18,7 @@ import seaborn as sns
 from sklearn import metrics
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
+from nltk.corpus import stopwords
 
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
@@ -245,16 +246,61 @@ plt.show()
 # It is clear that the data selected for this project has a good balance of 
 # reliable and unreliable news quotes. 
 
+# Find max and min date: 
+dateMin = df.Date.min()
+# dateMin = 2012-05-22
+dateMax = df.Date.max()
+# dateMax = 2020-12-22
 
+# Get Average Length of Quote
+averageLength = df['Quote'].apply(len).mean()
+# averageLength = 102.33912439193885
 
+# Shortest Quote: 
+shortestQuote = df['Quote'].apply(len).min()
+# shortestQuote = 23
 
+# Longest Quote:
+longestQuote = df['Quote'].apply(len).max()
+# longestQuote = 313 
 
-# Average Lenght of Quote
-# Shortest Quote
-# Longest Quote
+# Top 15 most commons words used in quotes:
 
+# Multitude of methods for counting frequency of words in a pandas dataframe.
+# Inititally implemented a Counter from the collections library. However, when 
+# ran it returned words such as 'says', 'I' and 'me' (words with little value).
+# Discovered that nltk offers a collection of these 'stopwords' which can be used
+# to exlucde these irrelevant words from the count. The code below was researched 
+# via Stack Overflow. However, it has been changed as I currently do not want to 
+# store these frequently appearing words in the dataframe. 
+# https://stackoverflow.com/a/56134977/11058925
+# Words such as 'says' also appear frequently in this dataset and are not included in
+# the collection of stopwords. Therefore, I added it to the stopwords collection
+# as it adds no value to this analysis.
 
+stop = stopwords.words('english') 
+newStopWords = ['says', 'one', 'people', 'said', 'since', 'new', 'shows', 'would']
+stop.extend(newStopWords)
 
+frequentWords = df['Quote'].str.lower() \
+        .apply(lambda x: 
+           ' '.join([word for word in str(x).split() if word not in (stop)])) \
+        .str.split(expand=True).stack().value_counts()
+
+frequentWords.plot.bar()
+plt.title("Top 15 Words")
+plt.ylabel("Total Appearances")
+plt.xlabel("Word")
+plt.xlim(0,15)
+plt.show()
+
+# We can see from the bar chart displayed above that the majority of the most 
+# frequently used words relate to US politicians. Trump appears 120 times 
+# throughout the dataset with Donald appearing 89 times. Surprisingly
+# COVID-19 only appeared 49 times. Currently this analysis of the most 
+# frequently used words does not offer much insight into the business problem.
+# However, in the next section I intend to review which of these words are 
+# assosicated with reliable and unreliable news quotes. 
 
 
 
