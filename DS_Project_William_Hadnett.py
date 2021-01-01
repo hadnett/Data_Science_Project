@@ -406,6 +406,19 @@ plt.show()
 # =============================================================================
 # STEP 5 - Feature Engineering
 # =============================================================================
+from textblob import TextBlob
+
+df['Sentiment'] = df.Quote.apply(lambda x: TextBlob(str(x)).sentiment.polarity)
+# 0 = Netural Setiment, Greater than 0 indicates position, Less than 0  indicates
+# negative.
+
+
+
+# Analysis setiment of quote.
+# Get sex of source
+# Analysis sex of source
+# Create character count variable
+
 
 
 # TODO Also Determine if Person is male or female.
