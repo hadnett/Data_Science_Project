@@ -48,7 +48,7 @@ os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_Will
 # cleaning section of this project.  
 
 post_details = []
-scrapeData = False
+freshData = False
 
 def parseHTML(isTrue):
     for i in range(1,25,1):
@@ -63,7 +63,7 @@ def parseHTML(isTrue):
             post_details.append([source, quote, date, isTrue])
         time.sleep(2)
 
-if scrapeData:
+if freshData:
     # Get True News Stories
     parseHTML('true')
     
@@ -143,9 +143,8 @@ describe = df.describe()
 
 # Discovered that two different types of quotes where present within this dataset
 # removed both sets to avoid issues with processing later during this project.
-
 df['Quote'] = df['Quote'].str.strip('[",“,”]') 
-df['Quote'] = df['Quote'].str.replace('[",“,”]', '')
+df['Quote'] = df['Quote'].astype(str).str.replace('[",“,”]', '')
 
 # Parse date field to determine date of post.
 # Started by separating the date data found into three separate columns.
@@ -412,22 +411,87 @@ df['Sentiment'] = df.Quote.apply(lambda x: TextBlob(str(x)).sentiment.polarity)
 # 0 = Netural Setiment, Greater than 0 indicates position, Less than 0  indicates
 # negative.
 
+positive = df.groupby('isTrue')['Sentiment'].apply(lambda x: x[x > 0].count())
+neutral = df.groupby('isTrue')['Sentiment'].apply(lambda x: x[x == 0].count())
+negative = df.groupby('isTrue')['Sentiment'].apply(lambda x: x[x < 0].count())
 
+plotDf = pd.merge(pd.merge(positive, neutral, on='isTrue', suffixes=[None, '_neutral']), negative, on='isTrue', suffixes=['_positive', '_negative'])
+plotDf.plot.bar()
+plt.title("Reliable Quotes by Gender")
+plt.ylabel("Count")
+plt.xlabel("Gender")
+plt.show()
 
-# Analysis setiment of quote.
-# Get sex of source
-# Analysis sex of source
-# Create character count variable
-
-
+# Get Gender of Source.
+import openapi_client 
 
 # TODO Also Determine if Person is male or female.
 # TODO Setiment Analysis of posts.
 # TODO Shuffle Data. 
 
+def checkValidName(name):
+    import en_core_web_sm
+    nlp = en_core_web_sm.load()
+    doc = nlp(name)
+    for token in doc.ents:
+        if token.label_ == 'PERSON':
+            return True
+    return False
 
+# Please note on large datasets this function can take several minutes to run.
+def getGender(name):
+    from openapi_client.rest import ApiException
+    
+    # Configure API key authorization: api_key
+    configuration = openapi_client.Configuration()
+    configuration.api_key['X-API-KEY'] = ''
+    
+    # create an instance of the API class
+    api_instance = openapi_client.PersonalApi(openapi_client.ApiClient(configuration))
+    full_name = name
+    
+    try:
+        if checkValidName(full_name):
+            api_response = api_instance.gender_full(full_name)
+            return api_response.likely_gender
+        else:
+            return 'unknown'
+    except ApiException as e:
+        print("Exception when calling PersonalApi->gender: %s\n" % e)
 
+if freshData:
+    df['Gender'] = df.Source.apply(lambda x: getGender(str(x)))
+    # Output new features to file for future use as retrieving gender from 
+    # API can take up to several minutes to complete. 
+    df.to_csv('fake_news_features.csv', encoding="utf-8", index=False)
+else:
+    df = pd.read_csv('fake_news_features.csv')
+    
 
+genderCount = df['Gender'].value_counts()
+genderCount.plot.pie(autopct='%1.2f')
+plt.show()
+
+# 44.2% of the quotes collected the gender is not known for and these account
+# primarily for quotes where the source is documented as Facebook Post, Blogger
+# Intsagram i.e. posts of social media platforms/websites. 43.85% for the quotes collected 
+# belong to males and only 11.95% of the quotes collected belong to females.
+
+genderTrue = df.groupby('Gender')['isTrue'].apply(lambda x: x[x == True].count())
+
+genderTrue.plot.bar()
+plt.title("Reliable Quotes by Gender")
+plt.ylabel("Count")
+plt.xlabel("Gender")
+plt.show()
+
+genderFalse = df.groupby('Gender')['isTrue'].apply(lambda x: x[x == False].count())
+
+genderFalse.plot.bar()
+plt.title("Unreliable Quotes by Gender")
+plt.ylabel("Count")
+plt.xlabel("Gender")
+plt.show()
 
 
 
