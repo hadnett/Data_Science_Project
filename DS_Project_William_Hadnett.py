@@ -51,7 +51,7 @@ post_details = []
 freshData = False
 
 def parseHTML(isTrue):
-    for i in range(1,25,1):
+    for i in range(1,40,1):
         url= 'https://www.politifact.com/factchecks/list/?page='+str(i)+'&ruling='+ isTrue +''
         html = requests.get(url).text
         soup = BeautifulSoup(html,	'html5lib')
@@ -76,8 +76,8 @@ if freshData:
     
     # Write data to CSV file for future use. 
     df.to_csv('fake_news.csv', encoding="utf-8", index=False)
-else:
-    df = pd.read_csv('fake_news.csv')
+
+df = pd.read_csv('fake_news.csv')
 
 # =============================================================================
 # STEP 2 - Data Mining - Specify data characteristics. 
@@ -364,7 +364,18 @@ plt.ylabel("Count")
 plt.xlabel("Word")
 plt.xlim(0,10)
 plt.show()
-        
+
+
+from wordcloud import WordCloud
+all_words = ' '.join([text for text in df['Quote']])
+wordcloud = WordCloud(max_words=100, width= 800, height= 500, max_font_size = 110,
+ collocations = False).generate(all_words)
+plt.figure(figsize=(10,7))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.show()
+
+     
 unreliableData = df[df["isTrue"] == False]
 
 frequentWordsUnreliable = unreliableData.Quote.str.lower() \
@@ -464,8 +475,8 @@ if freshData:
     # Output new features to file for future use as retrieving gender from 
     # API can take up to several minutes to complete. 
     df.to_csv('fake_news_features.csv', encoding="utf-8", index=False)
-else:
-    df = pd.read_csv('fake_news_features.csv')
+
+df = pd.read_csv('fake_news_features.csv')
     
 
 genderCount = df['Gender'].value_counts()
@@ -504,7 +515,93 @@ figure(num=None, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
 sns.boxplot(x=df.Word_Count).set_title("Word Count")
 plt.show()
 
+# TF-IDF = Term Frequency (TF) * Inverse Document Frequency (IDF)
+
+figure(num=None, figsize=(12, 12), dpi=80, facecolor='w', edgecolor='k')
+sns.pairplot(df)
+
+figure(num=None, figsize=(12, 12), dpi=80, facecolor='w', edgecolor='k')
+sns.heatmap(df.corr(), annot=True, cmap = 'Reds')
+plt.show()
+
+# =============================================================================
+# STEP 6 - Predictive Modelling
+# =============================================================================
+
+x = df['Quote'] #pandas dataframe
+
+df['isTrueType']=np.where(df.isTrue == True,1,0)
+y = df['isTrueType']
+
+from sklearn.model_selection import train_test_split
+
+train_ratio = 0.75
+validation_ratio = 0.15
+test_ratio = 0.10
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=1 - train_ratio)
+x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio)) 
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import confusion_matrix
+
+tfidf_vectorizer=TfidfVectorizer(stop_words='english', max_df=0.7)
+
+tfidf_train = tfidf_vectorizer.fit_transform(x_train)
+tfidf_val = tfidf_vectorizer.transform(x_val)
+tfidf_test = tfidf_vectorizer.transform(x_test)
+
+from sklearn.linear_model import PassiveAggressiveClassifier
+pac=PassiveAggressiveClassifier(max_iter=50)
+pac.fit(tfidf_train,y_train)
+
+y_pred=pac.predict(tfidf_val)
+
+pac.score(tfidf_val, y_val)
+# Score: 0.7456647398843931
+
+
+
+from sklearn.neural_network import MLPClassifier
+model = MLPClassifier(hidden_layer_sizes=(13,13,13),max_iter=500)
+
+#Select the model using the training data
+model.fit(tfidf_train, y_train)
+
+predictions = model.predict(tfidf_val)
+
+confusionMatrix = confusion_matrix(y_val, predictions)
+print(confusionMatrix)
+
+model.score(tfidf_val, y_val)
+# Score: 0.7601156069364162
 
 
 
 
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression()
+
+#Select the model using the training data
+model.fit(tfidf_train, y_train)
+
+predictions = model.predict(tfidf_val)
+
+#Can explore coefficients but for classification we apply to test set to measure how good it is
+print(model.coef_)
+print(model.intercept_)
+
+model.score(tfidf_val, y_val)
+# Score: 0.7630057803468208
+
+
+
+
+from sklearn.naive_bayes import MultinomialNB
+clf = MultinomialNB()
+clf.fit(tfidf_train, y_train)
+MultinomialNB()
+predictions = clf.predict(tfidf_val)
+confusionMatrix = confusion_matrix(y_val, predictions)
+clf.score(tfidf_val, y_val)
+# Score: 0.7687861271676301
