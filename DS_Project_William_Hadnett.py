@@ -416,6 +416,10 @@ plt.show()
 # =============================================================================
 # STEP 5 - Feature Engineering
 # =============================================================================
+
+# Encode isTrue column for processing:
+df['isTrueType']=np.where(df.isTrue == True,1,0)
+
 from textblob import TextBlob
 
 df['Sentiment'] = df.Quote.apply(lambda x: TextBlob(str(x)).sentiment.polarity)
@@ -525,12 +529,10 @@ sns.heatmap(df.corr(), annot=True, cmap = 'Reds')
 plt.show()
 
 # =============================================================================
-# STEP 6 - Predictive Modelling
+# STEP 6 - Predictive Modelling - Split Data
 # =============================================================================
 
-x = df['Quote'] #pandas dataframe
-
-df['isTrueType']=np.where(df.isTrue == True,1,0)
+x = df['Quote']
 y = df['isTrueType']
 
 from sklearn.model_selection import train_test_split
@@ -542,6 +544,10 @@ test_ratio = 0.10
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=1 - train_ratio)
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + validation_ratio)) 
 
+# =============================================================================
+# STEP 6 - Predictive Modelling - Prediction Models (Fit and Validate)
+# =============================================================================
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix
 
@@ -551,57 +557,142 @@ tfidf_train = tfidf_vectorizer.fit_transform(x_train)
 tfidf_val = tfidf_vectorizer.transform(x_val)
 tfidf_test = tfidf_vectorizer.transform(x_test)
 
+########## Model: Passive Aggressive Classifier ###########
+
 from sklearn.linear_model import PassiveAggressiveClassifier
 pac=PassiveAggressiveClassifier(max_iter=50)
 pac.fit(tfidf_train,y_train)
 
-y_pred=pac.predict(tfidf_val)
+###  Evaluate Model Based on Validation Set ###
 
-pac.score(tfidf_val, y_val)
-# Score: 0.7456647398843931
+predictions = pac.predict(tfidf_val)
 
+confusionMatrix = confusion_matrix(y_val, predictions)
+print(confusionMatrix)
 
+accuracy = (confusionMatrix[0,0]+confusionMatrix[1,1])/len(predictions)
+errorRate = 1- accuracy
+precision = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[0,1])
+recall = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[1,0])
+print("Accuracy: " + str(accuracy))
+print("Error Rate: " + str(errorRate))
+print("Precision: " + str(precision))
+print("Recall: " + str(recall))
+
+# [[132  41]
+# [ 49 124]]
+
+# Accuracy: 0.7398843930635838
+# Error Rate: 0.2601156069364162
+# Precision: 0.7515151515151515
+# Recall: 0.7167630057803468
+
+########## Model: MLPClassifier ###########
 
 from sklearn.neural_network import MLPClassifier
 model = MLPClassifier(hidden_layer_sizes=(13,13,13),max_iter=500)
-
-#Select the model using the training data
 model.fit(tfidf_train, y_train)
+
+###  Evaluate Model Based on Validation Set ###
 
 predictions = model.predict(tfidf_val)
 
 confusionMatrix = confusion_matrix(y_val, predictions)
 print(confusionMatrix)
 
-model.score(tfidf_val, y_val)
-# Score: 0.7601156069364162
+accuracy = (confusionMatrix[0,0]+confusionMatrix[1,1])/len(predictions)
+errorRate = 1- accuracy
+precision = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[0,1])
+recall = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[1,0])
+print("Accuracy: " + str(accuracy))
+print("Error Rate: " + str(errorRate))
+print("Precision: " + str(precision))
+print("Recall: " + str(recall))
 
+# [[136  37]
+# [ 44 129]]
 
+# Accuracy: 0.7658959537572254
+# Error Rate: 0.2341040462427746
+# Precision: 0.7771084337349398
+# Recall: 0.7456647398843931
 
+########## Model: LogisticRegression ###########
 
 from sklearn.linear_model import LogisticRegression
 model = LogisticRegression()
-
-#Select the model using the training data
 model.fit(tfidf_train, y_train)
+
+###  Evaluate Model Based on Validation Set ###
 
 predictions = model.predict(tfidf_val)
 
-#Can explore coefficients but for classification we apply to test set to measure how good it is
-print(model.coef_)
-print(model.intercept_)
+confusionMatrix = confusion_matrix(y_val, predictions)
+print(confusionMatrix)
 
-model.score(tfidf_val, y_val)
-# Score: 0.7630057803468208
+accuracy = (confusionMatrix[0,0]+confusionMatrix[1,1])/len(predictions)
+errorRate = 1- accuracy
+precision = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[0,1])
+recall = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[1,0])
+print("Accuracy: " + str(accuracy))
+print("Error Rate: " + str(errorRate))
+print("Precision: " + str(precision))
+print("Recall: " + str(recall))
 
+# [[140  33]
+# [ 49 124]]
 
+# Accuracy: 0.7630057803468208
+# Error Rate: 0.23699421965317924
+# Precision: 0.7898089171974523
+# Recall: 0.7167630057803468
 
+########## Model: MultinomialNB ###########
 
 from sklearn.naive_bayes import MultinomialNB
 clf = MultinomialNB()
 clf.fit(tfidf_train, y_train)
 MultinomialNB()
+
+###  Evaluate Model Based on Validation Set ###
+
 predictions = clf.predict(tfidf_val)
+
 confusionMatrix = confusion_matrix(y_val, predictions)
-clf.score(tfidf_val, y_val)
-# Score: 0.7687861271676301
+print(confusionMatrix)
+
+accuracy = (confusionMatrix[0,0]+confusionMatrix[1,1])/len(predictions)
+errorRate = 1- accuracy
+precision = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[0,1])
+recall = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[1,0])
+print("Accuracy: " + str(accuracy))
+print("Error Rate: " + str(errorRate))
+print("Precision: " + str(precision))
+print("Recall: " + str(recall))
+
+# [[135  38]
+# [ 42 131]]
+
+# Accuracy: 0.7687861271676301
+# Error Rate: 0.23121387283236994
+# Precision: 0.7751479289940828
+# Recall: 0.7572254335260116
+
+# =============================================================================
+# STEP 6 - Predictive Modelling - Model Selection
+# =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
