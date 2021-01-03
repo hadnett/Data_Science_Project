@@ -444,7 +444,7 @@ def getGender(name):
     
     # Configure API key authorization: api_key
     configuration = openapi_client.Configuration()
-    configuration.api_key['X-API-KEY'] = ''
+    configuration.api_key['X-API-KEY'] = '57ce2a2f19dd0ec20baca43afddaef72'
     
     # create an instance of the API class
     api_instance = openapi_client.PersonalApi(openapi_client.ApiClient(configuration))
@@ -493,7 +493,16 @@ plt.ylabel("Count")
 plt.xlabel("Gender")
 plt.show()
 
+#### Calculate Word Count for each quote ####
 
+df['Word_Count'] = df.Quote.apply(lambda x: len(str(x).split(' ')))
+
+meanWordCount =  df.Word_Count.mean()
+# meanWordCount: 17.324530924252954
+
+figure(num=None, figsize=(8, 6), dpi=80, facecolor='w', edgecolor='k')
+sns.boxplot(x=df.Word_Count).set_title("Word Count")
+plt.show()
 
 
 
