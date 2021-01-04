@@ -549,7 +549,7 @@ x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_r
 # =============================================================================
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 
 tfidf_vectorizer=TfidfVectorizer(stop_words='english', max_df=0.7)
 
@@ -557,7 +557,7 @@ tfidf_train = tfidf_vectorizer.fit_transform(x_train)
 tfidf_val = tfidf_vectorizer.transform(x_val)
 tfidf_test = tfidf_vectorizer.transform(x_test)
 
-########## Model: Passive Aggressive Classifier ###########
+########## Model 1: Passive Aggressive Classifier ###########
 
 from sklearn.linear_model import PassiveAggressiveClassifier
 pac=PassiveAggressiveClassifier(max_iter=50)
@@ -579,15 +579,15 @@ print("Error Rate: " + str(errorRate))
 print("Precision: " + str(precision))
 print("Recall: " + str(recall))
 
-# [[132  41]
+# [[129  44]
 # [ 49 124]]
 
-# Accuracy: 0.7398843930635838
-# Error Rate: 0.2601156069364162
-# Precision: 0.7515151515151515
+# Accuracy: 0.7312138728323699
+# Error Rate: 0.26878612716763006
+# Precision: 0.7380952380952381
 # Recall: 0.7167630057803468
 
-########## Model: MLPClassifier ###########
+########## Model 2: MLPClassifier ###########
 
 from sklearn.neural_network import MLPClassifier
 model = MLPClassifier(hidden_layer_sizes=(13,13,13),max_iter=500)
@@ -609,15 +609,15 @@ print("Error Rate: " + str(errorRate))
 print("Precision: " + str(precision))
 print("Recall: " + str(recall))
 
-# [[136  37]
+# [[133  40]
 # [ 44 129]]
 
-# Accuracy: 0.7658959537572254
-# Error Rate: 0.2341040462427746
-# Precision: 0.7771084337349398
+# Accuracy: 0.7572254335260116
+# Error Rate: 0.24277456647398843
+# Precision: 0.7633136094674556
 # Recall: 0.7456647398843931
 
-########## Model: LogisticRegression ###########
+########## Model 3: LogisticRegression ###########
 
 from sklearn.linear_model import LogisticRegression
 model = LogisticRegression()
@@ -647,7 +647,7 @@ print("Recall: " + str(recall))
 # Precision: 0.7898089171974523
 # Recall: 0.7167630057803468
 
-########## Model: MultinomialNB ###########
+########## Model 4: MultinomialNB ###########
 
 from sklearn.naive_bayes import MultinomialNB
 clf = MultinomialNB()
@@ -682,14 +682,50 @@ print("Recall: " + str(recall))
 # STEP 6 - Predictive Modelling - Model Selection
 # =============================================================================
 
+# We can see that from the analysis above that all four models performed similarly.
+# However, it is clear that model 4 (MultinomialNB) performed the best out of 
+# the four models tested. Model 4 has a accuracy of 76.87%, a precision of 77.51% 
+# and a recall  of 75.72%. These figures give me confidence in this model and I 
+# believe that it has the potential to reliable detect whether or not a news quote
+# is reliable or unreliable (True or False).
 
+predictions = clf.predict(tfidf_test)
 
+confusionMatrix = confusion_matrix(y_test, predictions)
+print(confusionMatrix)
 
+labels = ['Reliable', 'Unreliable']
+plot_confusion_matrix(clf,tfidf_test, y_test, display_labels=labels, cmap=plt.cm.Blues) 
 
+accuracy = (confusionMatrix[0,0]+confusionMatrix[1,1])/len(predictions)
+errorRate = 1- accuracy
+precision = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[0,1])
+recall = (confusionMatrix[1,1])/(confusionMatrix[1,1] + confusionMatrix[1,0])
+F1Score = 2 * ((precision * recall) / (precision + recall))
+print("Accuracy: " + str(accuracy))
+print("Error Rate: " + str(errorRate))
+print("Precision: " + str(precision))
+print("Recall: " + str(recall))
+print("F1 Score: " + str(F1Score))
 
+# [[ 88  12]
+# [ 20 111]]
 
+# Accuracy: 0.8614718614718615
+# Error Rate: 0.1385281385281385
+# Precision: 0.9024390243902439
+# Recall: 0.8473282442748091
+# F1 Score: 0.874015748031496
 
-
+### Plot ROC Curve ###  
+fpr, tpr, threshold = metrics.roc_curve(y_test, predictions)
+plt.plot(fpr, tpr, color='orange', label='ROC')
+plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Fake News Detection Curve')
+plt.legend()
+plt.show()
 
 
 
