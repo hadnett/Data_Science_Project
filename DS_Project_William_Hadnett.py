@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from nltk.corpus import stopwords
 from wordcloud import WordCloud
+import string
 
 
 os.chdir('/Users/williamhadnett/Documents/Data_Science/Data_Science_Project_William_Hadnett')
@@ -144,6 +145,35 @@ describe = df.describe()
 # removed both sets to avoid issues with processing later during this project.
 df['Quote'] = df['Quote'].str.strip('[",“,”]') 
 df['Quote'] = df['Quote'].astype(str).str.replace('[",“,”]', '')
+
+# Convert all quotes & sources to lower case for future analysis and equality 
+# checking. 
+
+df['Quote'] = df['Quote'].apply(lambda x: x.lower())
+df['Source'] = df['Source'].apply(lambda x: x.lower())
+
+# Remove all punctuation as it adds no value to the analysis.
+
+def remove_puncuation(data):
+    text_list = [char for char in data if char not in string.punctuation]
+    clean_text = ''.join(text_list)
+    return clean_text
+
+df['Quote'] = df['Quote'].apply(remove_puncuation)
+df['Source'] = df['Source'].apply(remove_puncuation)
+
+# Remove stop words from the dataset. Stop words are the most common words that
+# appear in the English language (the, be, to). These words add no value to my 
+# analysis as this model should only focus on key words which define meaning 
+# with in the text.
+
+stop = stopwords.words('english') 
+newStopWords = ['says', 'say', 'one', 'people', 'said', 'since', 'new', 'shows', 'would']
+stop.extend(newStopWords)
+
+df['Quote'] = df['Quote'].apply(lambda x: 
+           ' '.join([word for word in str(x).split() if word not in (stop)])) 
+
 
 # Parse date field to determine date of post.
 # Started by separating the date data found into three separate columns.
@@ -278,14 +308,7 @@ longestQuote = df['Quote'].apply(len).max()
 # the collection of stopwords. Therefore, I added it to the stopwords collection
 # as it adds no value to this analysis.
 
-stop = stopwords.words('english') 
-newStopWords = ['says', 'one', 'people', 'said', 'since', 'new', 'shows', 'would']
-stop.extend(newStopWords)
-
-frequentWords = df['Quote'].str.lower() \
-        .apply(lambda x: 
-           ' '.join([word for word in str(x).split() if word not in (stop)])) \
-        .str.split(expand=True).stack().value_counts()
+frequentWords = df['Quote'].str.split(expand=True).stack().value_counts()
 
 frequentWords.plot.bar()
 plt.title("Top 15 Words")
@@ -301,6 +324,14 @@ plt.show()
 # frequently used words does not offer much insight into the business problem.
 # However, in the next section I intend to review which of these words are 
 # assosicated with reliable and unreliable news quotes. 
+
+all_words = ' '.join([text for text in df['Quote'] if text not in (stop)])
+wordcloud = WordCloud(max_words=100, width= 800, height= 500, max_font_size = 110,
+ collocations = False).generate(all_words)
+plt.figure(figsize=(10,7))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.show()
 
 # =============================================================================
 # STEP 4 - Data Exploration - Bivariate
@@ -352,10 +383,7 @@ plt.show()
 
 reliableData = df[df["isTrue"] == True]
 
-frequentWordsReliable = reliableData.Quote.str.lower() \
-        .apply(lambda x: 
-           ' '.join([word for word in str(x).split() if word not in (stop)])) \
-        .str.split(expand=True).stack().value_counts()
+frequentWordsReliable = reliableData.Quote.str.split(expand=True).stack().value_counts()
         
 frequentWordsReliable.plot.bar()
 plt.title("10 Most Frequent Words in Reliable News")
@@ -363,23 +391,10 @@ plt.ylabel("Count")
 plt.xlabel("Word")
 plt.xlim(0,10)
 plt.show()
-
-
-all_words = ' '.join([text for text in df['Quote']])
-wordcloud = WordCloud(max_words=100, width= 800, height= 500, max_font_size = 110,
- collocations = False).generate(all_words)
-plt.figure(figsize=(10,7))
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis('off')
-plt.show()
-
      
 unreliableData = df[df["isTrue"] == False]
 
-frequentWordsUnreliable = unreliableData.Quote.str.lower() \
-        .apply(lambda x: 
-           ' '.join([word for word in str(x).split() if word not in (stop)])) \
-        .str.split(expand=True).stack().value_counts()
+frequentWordsUnreliable = unreliableData.Quote.str.split(expand=True).stack().value_counts()
 
 frequentWordsUnreliable.plot.bar()
 plt.title("10 Most Frequent Words in Unreliable News")
@@ -387,7 +402,6 @@ plt.ylabel("Count")
 plt.xlabel("Word")
 plt.xlim(0,10)
 plt.show()
-
 
 mean_len = df.Quote.str.len().groupby(df.isTrue).mean()
 
@@ -414,9 +428,6 @@ plt.show()
 # =============================================================================
 # STEP 5 - Feature Engineering
 # =============================================================================
-
-# Encode isTrue column for processing:
-df['isTrueType']=np.where(df.isTrue == True,1,0)
 
 from textblob import TextBlob
 
@@ -521,6 +532,52 @@ sns.pairplot(df)
 figure(num=None, figsize=(12, 12), dpi=80, facecolor='w', edgecolor='k')
 sns.heatmap(df.corr(), annot=True, cmap = 'Reds')
 plt.show()
+
+# Encode isTrue column for processing:
+df['isTrueType']=np.where(df.isTrue == True,1,0)
+
+# =============================================================================
+# STEP 4 - Data Exploration - Multivariate
+# =============================================================================
+
+result = pd.pivot_table(data=df, index='isTrue', columns='Gender', values='Word_Count', aggfunc=np.mean)
+print(result)
+
+# Gender     female       male    unknown
+# isTrue                                 
+# False   15.974359  17.571970  16.933025
+# True    18.688679  18.381148  17.056410
+
+figure(num=None, figsize=(8, 8), dpi=80, facecolor='w', edgecolor='k')
+sns.heatmap(result, annot=True, cmap = 'RdYlGn', center=0.117)
+plt.show()
+
+result = pd.pivot_table(data=df, index='isTrue', columns='Gender', values='Sentiment', aggfunc=np.mean)
+print(result)
+
+# Gender    female      male   unknown
+# isTrue                              
+# False   0.061289  0.028853  0.016749
+# True    0.078845  0.074304  0.029842
+
+figure(num=None, figsize=(8, 8), dpi=80, facecolor='w', edgecolor='k')
+sns.heatmap(result, annot=True, cmap = 'RdYlGn', center=0.117)
+plt.show()
+
+result = pd.pivot_table(data=df, index='Gender', columns='Year', 
+                        values='isTrue', aggfunc='count', fill_value=0)
+print(result)
+
+# Year     2012  2013  2014  2015  2016  2017  2018  2019  2020
+# Gender                                                       
+# female      0    30    23    28    55    24    17    25    49
+# male        1    91   125   114   128    71    77   125   264
+# unknown     0    29    31    43    30    13    29   140   746
+
+figure(num=None, figsize=(12, 8), dpi=80, facecolor='w', edgecolor='k')
+sns.heatmap(result, annot=True, cmap = 'RdYlGn', center=0.117)
+plt.show()
+
 
 # =============================================================================
 # STEP 6 - Predictive Modelling - Split Data
