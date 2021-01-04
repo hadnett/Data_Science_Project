@@ -19,7 +19,6 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 from nltk.corpus import stopwords
-import re
 from wordcloud import WordCloud
 
 
@@ -366,7 +365,6 @@ plt.xlim(0,10)
 plt.show()
 
 
-from wordcloud import WordCloud
 all_words = ' '.join([text for text in df['Quote']])
 wordcloud = WordCloud(max_words=100, width= 800, height= 500, max_font_size = 110,
  collocations = False).generate(all_words)
@@ -439,10 +437,6 @@ plt.show()
 
 # Get Gender of Source.
 import openapi_client 
-
-# TODO Also Determine if Person is male or female.
-# TODO Setiment Analysis of posts.
-# TODO Shuffle Data. 
 
 def checkValidName(name):
     import en_core_web_sm
